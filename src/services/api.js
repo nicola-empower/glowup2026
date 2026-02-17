@@ -1,5 +1,4 @@
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxswB4sDqmL37OkfJVGhce236I_aTv1bF87tcgSZcgUSrVRObUbyWh8Oo5X_j3Z2OP6/exec';
-
 /**
  * Fetches user history and streak from Google Sheets.
  */
