@@ -2,12 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { GlassWater, Pill, PenLine, Smile, Meh, Frown } from 'lucide-react';
 
-export function DashboardWidgets({ isNightMode }) {
+export function DashboardWidgets({ isNightMode, resetKey }) {
     // Load initial state from local storage or defaults
     const [water, setWater] = useState(() => parseInt(localStorage.getItem('reclaim_water') || '0'));
     const [vitamins, setVitamins] = useState(() => localStorage.getItem('reclaim_vitamins') === 'true');
     const [mood, setMood] = useState(() => localStorage.getItem('reclaim_mood') || null);
     const [journal, setJournal] = useState(() => localStorage.getItem('reclaim_journal') || '');
+
+    // Reset impact when day ends (managed by parent via resetKey)
+    useEffect(() => {
+        setWater(parseInt(localStorage.getItem('reclaim_water') || '0'));
+        setVitamins(localStorage.getItem('reclaim_vitamins') === 'true');
+        setMood(localStorage.getItem('reclaim_mood') || null);
+        setJournal(localStorage.getItem('reclaim_journal') || '');
+    }, [resetKey]);
 
     // Effects to persist data
     useEffect(() => localStorage.setItem('reclaim_water', water), [water]);

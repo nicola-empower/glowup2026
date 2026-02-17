@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 
@@ -16,7 +16,18 @@ const ROUTINE_ITEMS = [
 ];
 
 export function EveningRoutine({ isNightMode }) {
-    const [selectedItems, setSelectedItems] = useState([]);
+    const [selectedItems, setSelectedItems] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem('reclaim_routine') || '[]');
+        } catch (e) {
+            console.error("Failed to parse routine:", e);
+            return [];
+        }
+    });
+
+    useEffect(() => {
+        localStorage.setItem('reclaim_routine', JSON.stringify(selectedItems));
+    }, [selectedItems]);
 
     const toggleItem = (item) => {
         if (selectedItems.includes(item)) {

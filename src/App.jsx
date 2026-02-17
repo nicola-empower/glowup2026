@@ -14,15 +14,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { fetchUserData, saveDailyLog } from './services/api';
 
 function App() {
-  const { now, hp, status, isLate } = useTime();
+  const { now, hp, status, isWorkDone, isSelfCareTime } = useTime();
   const [isActive, setIsActive] = useState(true);
   const [streak, setStreak] = useState(() => {
     return parseInt(localStorage.getItem('reclaim_streak') || '0', 10);
   });
   const [history, setHistory] = useState(() => {
-    return JSON.parse(localStorage.getItem('reclaim_history') || '[]');
+    try {
+      return JSON.parse(localStorage.getItem('reclaim_history') || '[]');
+    } catch (e) {
+      console.error("Failed to parse history:", e);
+      return [];
+    }
   });
-  const [finalHP, setFinalHP] = useState(null);
+  const [resetKey, setResetKey] = useState(0);
 
   // Load Cloud Data on Mount
   useEffect(() => {
@@ -30,12 +35,10 @@ function App() {
       const cloudData = await fetchUserData();
       if (cloudData) {
         console.log("Cloud data loaded:", cloudData);
-        // Merge strategies: Union of history dates, Max of streak
         if (cloudData.streak > streak) {
           setStreak(cloudData.streak);
           localStorage.setItem('reclaim_streak', cloudData.streak.toString());
         }
-
         const mergedHistory = Array.from(new Set([...history, ...cloudData.history]));
         if (mergedHistory.length > history.length) {
           setHistory(mergedHistory);
@@ -49,60 +52,88 @@ function App() {
   // Handle End Day
   const handleEndDay = async () => {
     setIsActive(false);
-    setFinalHP(hp);
 
-    if (!isLate && hp > 90) {
-      const newStreak = streak + 1;
-      setStreak(newStreak);
-      localStorage.setItem('reclaim_streak', newStreak.toString());
+    // Always a win if you power down manually
+    const newStreak = streak + 1;
+    setStreak(newStreak);
+    localStorage.setItem('reclaim_streak', newStreak.toString());
 
-      // Add today to history if not exists
-      const todayStr = format(now, 'yyyy-MM-dd');
-      let newHistory = history;
-      if (!history.includes(todayStr)) {
-        newHistory = [...history, todayStr];
-        setHistory(newHistory);
-        localStorage.setItem('reclaim_history', JSON.stringify(newHistory));
-      }
-
-      // Save to Cloud
-      await saveDailyLog({
-        date: todayStr,
-        streak: newStreak,
-        data: {
-          hp,
-          water: localStorage.getItem('reclaim_water'),
-          vitamins: localStorage.getItem('reclaim_vitamins'),
-          mood: localStorage.getItem('reclaim_mood'),
-          journal: localStorage.getItem('reclaim_journal')
-        }
-      });
-
-    } else {
-      if (isLate) {
-        setStreak(0);
-        localStorage.setItem('reclaim_streak', '0');
-
-        // Log failure to cloud? Optional. For now only logging success/active end days.
-        await saveDailyLog({
-          date: format(now, 'yyyy-MM-dd'),
-          streak: 0,
-          data: { hp, status: 'failed_late' }
-        });
-      }
+    // Always add today to history
+    const todayStr = format(now, 'yyyy-MM-dd');
+    let newHistory = history;
+    if (!history.includes(todayStr)) {
+      newHistory = [...history, todayStr];
+      setHistory(newHistory);
+      localStorage.setItem('reclaim_history', JSON.stringify(newHistory));
     }
+
+    // Collect routine data
+    let routine = [];
+    try {
+      routine = JSON.parse(localStorage.getItem('reclaim_routine') || '[]');
+    } catch (e) {
+      console.error("Failed to parse routine:", e);
+    }
+
+    // Save to Cloud
+    await saveDailyLog({
+      date: todayStr,
+      streak: newStreak,
+      data: {
+        hp,
+        water: localStorage.getItem('reclaim_water'),
+        vitamins: localStorage.getItem('reclaim_vitamins'),
+        mood: localStorage.getItem('reclaim_mood'),
+        journal: localStorage.getItem('reclaim_journal'),
+        eveningRoutine: routine,
+        status: status // focus/evening/selfcare/sleep
+      }
+    });
+
+    // Clear Daily Data for Tomorrow
+    localStorage.removeItem('reclaim_water');
+    localStorage.removeItem('reclaim_vitamins');
+    localStorage.removeItem('reclaim_mood');
+    localStorage.removeItem('reclaim_journal');
+    localStorage.removeItem('reclaim_routine');
+
+    // Reset widgets
+    setResetKey(prev => prev + 1);
   };
 
-  const displayHP = isActive ? hp : (finalHP || hp);
-  const displayStatus = isActive ? status : (displayHP > 50 ? 'safe' : 'critical');
+  const displayHP = isActive ? hp : 100;
 
-  // Dynamic Background Logic
-  // Day (Active, Safe) -> Cream bg, Burgundy text
-  // Sunset (Active, Warning) -> Gradient Cream/Rose
-  // Night (Ended) -> Burgundy bg, Cream text ("Glow Down")
+  // Visual Status Mapping for HealthOrb
+  // focus -> safe (Champagne)
+  // evening & selfcare -> warning (Sunset Gradient)
+  // sleep -> critical (Burgundy - draining)
+  const orbStatus = isActive
+    ? ((status === 'evening' || status === 'selfcare') ? 'warning' : status === 'sleep' ? 'critical' : 'safe')
+    : 'safe';
 
+  // Text Logic
+  let statusTitle = "Focus Time";
+  let statusText = "You are in control. 6:00 PM is the deadline.";
+
+  if (!isActive) {
+    statusTitle = "Sanctuary Restored";
+    statusText = "The world can wait. Goodnight.";
+  } else {
+    if (status === 'evening') {
+      statusTitle = "Mum Mode";
+      statusText = "Dinner, bath, bedtime. Be present.";
+    } else if (status === 'selfcare') {
+      statusTitle = "Me Time";
+      statusText = "Fill your cup. You earned this.";
+    } else if (status === 'sleep') {
+      statusTitle = "Rest Required";
+      statusText = "Go to sleep to recharge for tomorrow.";
+    }
+  }
+
+  // Dynamic Background Interface
   const isNightMode = !isActive;
-  const isSunset = isActive && status === 'warning';
+  const isSunset = isActive && (status === 'evening' || status === 'selfcare');
 
   return (
     <div className={clsx(
@@ -147,19 +178,17 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full items-center">
           {/* Left: Health & Status */}
           <div className="flex flex-col items-center order-2 lg:order-1">
-            <HealthOrb hp={displayHP} status={displayStatus} inverted={isNightMode} />
+            <HealthOrb hp={displayHP} status={orbStatus} inverted={isNightMode} />
 
             <div className="mt-8 text-center">
               <h2 className={clsx(
                 "text-3xl font-serif mb-2 transition-colors duration-1000",
                 isNightMode ? "text-champagne" : "text-burgundy"
               )}>
-                {isActive ? (isLate ? "Overtime Mode" : "Focus Time") : "Sanctuary Restored"}
+                {statusTitle}
               </h2>
               <p className="text-sm opacity-70 max-w-xs mx-auto">
-                {isActive
-                  ? (isLate ? "Recharge required. Your peace is eroding." : "You are in control. 6:00 PM is the deadline.")
-                  : "The world can wait. Goodnight."}
+                {statusText}
               </p>
             </div>
           </div>
@@ -189,8 +218,9 @@ function App() {
                 <div className="w-full flex justify-center">
                   <StreakCalendar history={history} isNightMode={isNightMode} />
                 </div>
-                <EveningRoutine isNightMode={isNightMode} />
-                <DashboardWidgets isNightMode={isNightMode} />
+                {/* Key forces remount on reset to reload localStorage */}
+                <EveningRoutine key={`routine-${resetKey}`} isNightMode={isNightMode} />
+                <DashboardWidgets key={`widgets-${resetKey}`} isNightMode={isNightMode} resetKey={resetKey} />
 
                 {!isActive && (
                   <div className="mt-2 text-center max-w-md opacity-60">
