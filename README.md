@@ -2,7 +2,7 @@
 
 > *Your body achieves what your mind believes.*
 
-**Reclaim** is a high-performance "Digital Sanctuary" designed to combat burnout for driven professionals. It visualizes the intangible cost of overworking through an elegant, ethereal interface that gently nudges users to disconnect at the end of the day.
+**Reclaim** is a high-performance "Digital Sanctuary" designed to combat burnout for driven professionals. It visualises the intangible cost of overworking through an elegant, ethereal interface that gently nudges users to disconnect at the end of the day.
 
 Built as a Progressive Web App (PWA) with a focus on "Soft Luxury" aesthetics, it combines psychological cues with strict utility to enforce work-life boundaries.
 
@@ -11,7 +11,7 @@ Built as a Progressive Web App (PWA) with a focus on "Soft Luxury" aesthetics, i
 ## ✨ Key Features
 
 ### 🌙 Core "Health Engine"
-- **Visualized Burnout**: A glowing "Health Orb" represents your evening energy. It pulses steadily during the day but begins to degrade and fade if you work past the 18:00 deadline.
+- **Visualised Burnout**: A glowing "Health Orb" represents your evening energy. It pulses steadily during the day but begins to degrade and fade if you work past the 18:00 deadline.
 - **Overtime Penalty**: Working late physically drains the orb's light, creating a visceral feedback loop to encourage logging off.
 
 ### 🎨 Immersive Atmosphere
@@ -51,12 +51,12 @@ Built as a Progressive Web App (PWA) with a focus on "Soft Luxury" aesthetics, i
 
 | Feature / Phase | Description | Estimated Hours | Value (Est.) |
 | :--- | :--- | :---: | :---: |
-| **1. UI/UX Architecture** | Design system (Glassmorphism), color psychology, responsive layout, and interactive prototyping. | 15h | £1,400 |
+| **1. UI/UX Architecture** | Design system (Glassmorphism), colour psychology, responsive layout, and interactive prototyping. | 15h | £1,400 |
 | **2. Core Logic Engine** | `useTime` hooks, Health decay algorithms, and Streak calculation logic. | 10h | £950 |
 | **3. Advanced Animations** | Framer Motion integration for "Breathing" orb, page transitions, and dynamic background shifts. | 12h | £1,150 |
 | **4. PWA Implementation** | Service worker configuration, Manifest setup, "Install" flows, and offline caching strategies. | 8h | £750 |
 | **5. Cloud Integration** | Custom Google Apps Script backend development, API security, and React connection. | 10h | £950 |
-| **6. Polish & Asset Gen** | AI Icon generation, Soundscape integration, Mobile testing, and accessibility refinement. | 5h | £500 |
+| **6. Polish & Asset Gen** | Icon generation, Soundscape integration, Mobile testing, and accessibility refinement. | 5h | £500 |
 | **TOTAL** | **High-fidelity MVP deliverable** | **60h** | **~£5,700** |
 
 *> **Note**: This valuation includes the "Invisible Work" of performance optimization, state management architecture, and cross-device compatibility testing.*
@@ -67,7 +67,7 @@ Built as a Progressive Web App (PWA) with a focus on "Soft Luxury" aesthetics, i
 
 1.  **Clone the repo**:
     ```bash
-    git clone https://github.com/yourusername/reclaim.git
+    git clone https://github.com/nicola-empower/reclaim.git
     ```
 2.  **Install dependencies**:
     ```bash
@@ -101,7 +101,7 @@ To enable cloud sync:
 
 ## 🚀 Deploy to Vercel
 
-This project is optimized for deployment on Vercel.
+This project is optimised for deployment on Vercel.
 
 1.  Push your code to a GitHub repository.
 2.  Go to [Vercel](https://vercel.com) and **Add New Project**.
